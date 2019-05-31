@@ -24,7 +24,8 @@
 Game::Game( MainWindow& wnd )
 	:
 	wnd( wnd ),
-	gfx( wnd )
+	gfx( wnd ),
+	field(25)
 {
 }
 
@@ -38,8 +39,54 @@ void Game::Go()
 
 void Game::UpdateModel()
 {
+	//if (wnd.mouse.LeftIsPressed())
+	//{
+	//	//不希望在点击游戏区域以外的地方时发生断言异常：
+	//	const Vei2 mousePos = wnd.mouse.GetPos();
+	//	if (field.GetRect().Contains(mousePos))
+	//	{
+	//		//在里面用的也是mousePos
+	//		field.OnRevealClick(mousePos);
+	//	}
+	//}
+	//else if (wnd.mouse.RightIsPressed())
+	//{
+	//	//不希望在点击游戏区域以外的地方时发生断言异常：
+	//	const Vei2 mousePos = wnd.mouse.GetPos();
+	//	if (field.GetRect().Contains(mousePos))
+	//	{
+	//		//在里面用的也是mousePos
+	//		field.OnFlagClick(mousePos);
+	//	}
+	//}
+
+	//为了不发生按住不放连续拖动reveal的情况：
+	while (!wnd.mouse.IsEmpty())
+	{
+		const auto e = wnd.mouse.Read();
+		if (e.GetType() == Mouse::Event::Type::LPress)
+		{
+			//不希望在点击游戏区域以外的地方时发生断言异常：
+			const Vei2 mousePos = e.GetPos();
+			if (field.GetRect().Contains(mousePos))
+			{
+				//在里面用的也是mousePos
+				field.OnRevealClick(mousePos);
+			}
+		}
+		else if (e.GetType() == Mouse::Event::Type::RPress)
+		{
+			const Vei2 mousePos = e.GetPos();
+			if (field.GetRect().Contains(mousePos))
+			{
+				//在里面用的也是mousePos
+				field.OnFlagClick(mousePos);
+			}
+		}
+	}
 }
 
 void Game::ComposeFrame()
 {
+	field.Draw(gfx);
 }

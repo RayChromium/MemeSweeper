@@ -48,6 +48,35 @@ RectI MemeField::GetRect() const
 	return RectI(0,width*SpriteCodex::tileSize,0,height * SpriteCodex::tileSize);
 }
 
+void MemeField::OnRevealClick(const Vei2& screenPos)
+{
+	//将screenPos转换成gridPos：
+	const Vei2 gridPos = ScreenToGrid(screenPos);
+	assert(gridPos.x >= 0 && gridPos.x < width && gridPos.y >= 0 && gridPos.y < height);
+	Tile& tile = TileAt(gridPos);
+	if (!tile.IsRevealed() && !tile.IsFlagged())
+	{
+		tile.Reveal();
+	}
+}
+
+void MemeField::OnFlagClick(const Vei2& screenPos)
+{
+	//将screenPos转换成gridPos：
+	const Vei2 gridPos = ScreenToGrid(screenPos);
+	assert(gridPos.x >= 0 && gridPos.x < width && gridPos.y >= 0 && gridPos.y < height);
+	Tile & tile = TileAt(gridPos);
+	if (!tile.IsRevealed())
+	{
+		tile.ToggleFlag();
+	}
+}
+
+Vei2 MemeField::ScreenToGrid(const Vei2& screenPos)
+{
+	return screenPos/SpriteCodex::tileSize;
+}
+
 //返回类型实际上是一个私有内部类的成员引用
 //自动生成的Tile& MemeField::TileAt(const Vei2& gridPos)会报错
 //加上MemeField::
@@ -98,4 +127,29 @@ void MemeField::Tile::Draw(const Vei2& screenPos, Graphics& gfx) const
 	default:
 		break;
 	}
+}
+
+void MemeField::Tile::Reveal()
+{
+	assert(state == State::Hidden);
+	state = State::Revealed;
+}
+
+void MemeField::Tile::ToggleFlag()
+{
+	assert(!IsRevealed());
+	if (state == State::Hidden)
+	{
+		state = State::Flagged;
+	}
+}
+
+bool MemeField::Tile::IsFlagged() const
+{
+	return state==State::Flagged;
+}
+
+bool MemeField::Tile::IsRevealed()const
+{
+	return state==State::Revealed;
 }
