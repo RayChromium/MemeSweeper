@@ -46,7 +46,7 @@ void MemeField::Draw(Graphics& gfx) const
 			//要写出一个能将gridPos转换为scrrenPos的操作
 			//而且这里的TileAt函数应该需要有一个const限定，不改变调用者
 			//不然就没法在这个Draw函数中调用（编译器认为它可能进行改动）
-			TileAt(gridPos).Draw(gridPos * SpriteCodex::tileSize, gfx);
+			TileAt(gridPos).Draw(gridPos * SpriteCodex::tileSize, isFucked, gfx);
 		}
 	}
 }
@@ -58,25 +58,33 @@ RectI MemeField::GetRect() const
 
 void MemeField::OnRevealClick(const Vei2& screenPos)
 {
-	//将screenPos转换成gridPos：
-	const Vei2 gridPos = ScreenToGrid(screenPos);
-	assert(gridPos.x >= 0 && gridPos.x < width && gridPos.y >= 0 && gridPos.y < height);
-	Tile& tile = TileAt(gridPos);
-	if (!tile.IsRevealed() && !tile.IsFlagged())
+	if (!isFucked)
 	{
-		tile.Reveal();
+		//将screenPos转换成gridPos：
+		const Vei2 gridPos = ScreenToGrid(screenPos);
+		assert(gridPos.x >= 0 && gridPos.x < width && gridPos.y >= 0 && gridPos.y < height);
+		Tile & tile = TileAt(gridPos);
+		if (!tile.IsRevealed() && !tile.IsFlagged())
+		{
+			tile.Reveal();
+			if (tile.HasMeme())
+				isFucked = true;
+		}
 	}
 }
 
 void MemeField::OnFlagClick(const Vei2& screenPos)
 {
-	//将screenPos转换成gridPos：
-	const Vei2 gridPos = ScreenToGrid(screenPos);
-	assert(gridPos.x >= 0 && gridPos.x < width && gridPos.y >= 0 && gridPos.y < height);
-	Tile & tile = TileAt(gridPos);
-	if (!tile.IsRevealed())
+	if (!isFucked)
 	{
-		tile.ToggleFlag();
+		//将screenPos转换成gridPos：
+		const Vei2 gridPos = ScreenToGrid(screenPos);
+		assert(gridPos.x >= 0 && gridPos.x < width && gridPos.y >= 0 && gridPos.y < height);
+		Tile & tile = TileAt(gridPos);
+		if (!tile.IsRevealed())
+		{
+			tile.ToggleFlag();
+		}
 	}
 }
 
@@ -131,31 +139,76 @@ bool MemeField::Tile::HasMeme()const
 	return hasMeme;
 }
 
-void MemeField::Tile::Draw(const Vei2& screenPos, Graphics& gfx) const
+void MemeField::Tile::Draw(const Vei2& screenPos, bool fucked,Graphics& gfx) const
 {
 	//这里要取决于几个不同的条件来绘制不同图形：
 	//被点击没？有没有Meme？
-	switch (state)
+	if (!fucked)
 	{
-	case State::Hidden:				//没有点击
-		SpriteCodex::DrawTileButton(screenPos, gfx);
-		break;
-	case State::Flagged:			//没有点击并标记旗子
-		SpriteCodex::DrawTileButton(screenPos, gfx);
-		SpriteCodex::DrawTileFlag(screenPos, gfx);
-		break;
-	case State::Revealed:
-		if (!HasMeme())
+		switch (state)
 		{
-			SpriteCodex::DrawTileNumber(screenPos,nNeighborMemes,gfx);
+		case State::Hidden:				//没有点击
+			SpriteCodex::DrawTileButton(screenPos, gfx);
+			break;
+		case State::Flagged:			//没有点击并标记旗子
+			SpriteCodex::DrawTileButton(screenPos, gfx);
+			SpriteCodex::DrawTileFlag(screenPos, gfx);
+			break;
+		case State::Revealed:
+			if (!HasMeme())
+			{
+				SpriteCodex::DrawTileNumber(screenPos, nNeighborMemes, gfx);
+			}
+			else
+			{
+				SpriteCodex::DrawTileBomb(screenPos, gfx);
+			}
+			break;
+		default:
+			break;
 		}
-		else
+	}
+	else               //we are fucked
+	{
+		switch (state)
 		{
-			SpriteCodex::DrawTileBomb(screenPos, gfx);
+		case State::Hidden:				//没有点击
+			if (hasMeme)
+			{
+				SpriteCodex::DrawTileBomb(screenPos, gfx);
+			}
+			else
+			{
+				SpriteCodex::DrawTileButton(screenPos, gfx);
+			}
+
+			break;
+		case State::Flagged:			//没有点击并标记旗子
+			//如果有Meme，在Meme上层绘制旗子
+			if (HasMeme())
+			{
+				SpriteCodex::DrawTileBomb(screenPos, gfx);
+				SpriteCodex::DrawTileFlag(screenPos, gfx);
+			}
+			else
+			{
+				SpriteCodex::DrawTileBomb(screenPos, gfx);
+				SpriteCodex::DrawTileCross(screenPos, gfx);
+			}
+			break;
+		case State::Revealed:
+			if (!HasMeme())
+			{
+				SpriteCodex::DrawTileNumber(screenPos, nNeighborMemes, gfx);
+			}
+			else
+			{
+				SpriteCodex::DrawTileBombRed(screenPos, gfx);
+			}
+			break;
+		default:
+			break;
 		}
-		break;
-	default:
-		break;
 	}
 }
 

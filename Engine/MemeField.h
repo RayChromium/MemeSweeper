@@ -23,7 +23,7 @@ private:
 		//具体到每个Tile就必须规定位置坐标了
 		//这里的Vei2是一个制定了“屏幕像素坐标”的类型
 		//和MemeField类中用到的gridPos不一样，那个指的是网格坐标
-		void Draw(const Vei2& screenPos, Graphics& gfx)const;
+		void Draw(const Vei2& screenPos, bool fucked, Graphics& gfx)const;
 		void Reveal();
 		void ToggleFlag();
 		bool IsFlagged()const;
@@ -53,6 +53,8 @@ private:
 	//构造器初始化雷区后，遍历一个方块为中心的9格，计算周边的雷数
 	int CountNeighborMemes(const Vei2& gridPos);
 private:
+	//是否炸死
+	bool isFucked = false;
 	static constexpr int width = 20;
 	static constexpr int height = 16;
 	Tile tiles[width * height];
