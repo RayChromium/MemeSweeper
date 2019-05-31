@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <random>
 #include "SpriteCodex.h"
+#include <algorithm>
 
 MemeField::MemeField(int nMemes)
 {
@@ -23,6 +24,13 @@ MemeField::MemeField(int nMemes)
 			spawnPosition = { xDist(rng),yDist(rng) };
 		} while(TileAt(spawnPosition).HasMeme());		//通过Vei2类型的坐标找到Tile对象，看看是否有Meme
 		TileAt(spawnPosition).SpawnMeme();
+	}
+	for (Vei2 gridPos{ 0,0 }; gridPos.y < height; ++gridPos.y)
+	{
+		for (gridPos.x = 0; gridPos.x < width; ++gridPos.x)
+		{
+			TileAt(gridPos).SetNeighborMemeCount( CountNeighborMemes(gridPos) );
+		}
 	}
 }
 
@@ -90,6 +98,28 @@ const MemeField::Tile& MemeField::TileAt(const Vei2& gridPos) const
 	return tiles[gridPos.y * width + gridPos.x];
 }
 
+int MemeField::CountNeighborMemes(const Vei2& gridPos)
+{
+	//防止越界：
+	const int xStart = std::max(0, gridPos.x - 1);
+	const int yStart = std::max(0, gridPos.y - 1);
+	const int xEnd = std::min(width, gridPos.x + 1);
+	const int yEnd = std::min(height, gridPos.y + 1);
+	
+	int count = 0;
+	for (Vei2 gridPos = { xStart,yStart }; gridPos.y <= yEnd; ++gridPos.y)
+	{
+		for (gridPos.x = xStart; gridPos.x <= xEnd; ++gridPos.x)
+		{
+			if (TileAt(gridPos).HasMeme())
+			{
+				count++;
+			}
+		}
+	}
+	return count;
+}
+
 void MemeField::Tile::SpawnMeme()
 {
 	assert(!hasMeme);
@@ -117,7 +147,7 @@ void MemeField::Tile::Draw(const Vei2& screenPos, Graphics& gfx) const
 	case State::Revealed:
 		if (!HasMeme())
 		{
-			SpriteCodex::DrawTile0(screenPos,gfx);
+			SpriteCodex::DrawTileNumber(screenPos,nNeighborMemes,gfx);
 		}
 		else
 		{
@@ -152,4 +182,11 @@ bool MemeField::Tile::IsFlagged() const
 bool MemeField::Tile::IsRevealed()const
 {
 	return state==State::Revealed;
+}
+
+void MemeField::Tile::SetNeighborMemeCount(int memeCount)
+{
+	//检查，只有未初始化才进行赋值
+	assert(nNeighborMemes == -1);
+	nNeighborMemes = memeCount;
 }

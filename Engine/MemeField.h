@@ -28,6 +28,7 @@ private:
 		void ToggleFlag();
 		bool IsFlagged()const;
 		bool IsRevealed()const;
+		void SetNeighborMemeCount(int memeCount);
 	private:
 		State state = State::Hidden;
 		bool hasMeme;
@@ -49,6 +50,8 @@ private:
 	//搞一个从二维的Vei2类转换成一维的数组元素引用：
 	Tile& TileAt(const Vei2& gridPos);		//不能在后面加上const限定，因为你不能让一个const函数返回一个non-const的引用
 	const Tile& TileAt(const Vei2& gridPos)const;		//专门重载一个const版本的函数，解决Draw中的问题
+	//构造器初始化雷区后，遍历一个方块为中心的9格，计算周边的雷数
+	int CountNeighborMemes(const Vei2& gridPos);
 private:
 	static constexpr int width = 20;
 	static constexpr int height = 16;
