@@ -2,7 +2,6 @@
 //最好做防御性编程……
 #include <assert.h>
 #include <random>
-#include "SpriteCodex.h"
 #include <algorithm>
 
 MemeField::MemeField(int nMemes)
@@ -46,14 +45,14 @@ void MemeField::Draw(Graphics& gfx) const
 			//要写出一个能将gridPos转换为scrrenPos的操作
 			//而且这里的TileAt函数应该需要有一个const限定，不改变调用者
 			//不然就没法在这个Draw函数中调用（编译器认为它可能进行改动）
-			TileAt(gridPos).Draw(gridPos * SpriteCodex::tileSize, isFucked, gfx);
+			TileAt(gridPos).Draw(gridPos * SpriteCodex::tileSize + Vei2(leftStart,topStart), isFucked, gfx);
 		}
 	}
 }
 
 RectI MemeField::GetRect() const
 {
-	return RectI(0,width*SpriteCodex::tileSize,0,height * SpriteCodex::tileSize);
+	return RectI(leftStart, leftStart + width*SpriteCodex::tileSize,topStart,topStart + height * SpriteCodex::tileSize);
 }
 
 void MemeField::OnRevealClick(const Vei2& screenPos)
@@ -90,7 +89,7 @@ void MemeField::OnFlagClick(const Vei2& screenPos)
 
 Vei2 MemeField::ScreenToGrid(const Vei2& screenPos)
 {
-	return screenPos/SpriteCodex::tileSize;
+	return (screenPos - Vei2(leftStart, topStart))/ SpriteCodex::tileSize  ;
 }
 
 //返回类型实际上是一个私有内部类的成员引用

@@ -3,6 +3,7 @@
 #include "Vei2.h"
 #include "Graphics.h"
 #include "RectI.h"
+#include "SpriteCodex.h"
 
 class MemeField
 {
@@ -57,5 +58,7 @@ private:
 	bool isFucked = false;
 	static constexpr int width = 20;
 	static constexpr int height = 16;
+	static constexpr int leftStart = (Graphics::ScreenWidth - SpriteCodex::tileSize * width) / 2;
+	static constexpr int topStart = (Graphics::ScreenHeight - SpriteCodex::tileSize * height) / 2;
 	Tile tiles[width * height];
 };
